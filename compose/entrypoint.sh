@@ -65,7 +65,11 @@ case "$agent" in
     replace_link "$config/claude/commands" "$HOME/.claude/commands"
     replace_link "$config/claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
     export_eslint_runner
-    exec claude --settings "$config/claude/settings.json" "$@"
+    set -- --settings "$config/claude/settings.json" "$@"
+    if [ -f "$config/claude/mcp.json" ]; then
+      set -- --mcp-config "$config/claude/mcp.json" "$@"
+    fi
+    exec claude "$@"
     ;;
   codex)
     replace_link "$config/codex/config.toml" "$HOME/.codex/config.toml"

@@ -5,6 +5,8 @@ x-agent: &agent
   build:
     context: .
     dockerfile: Dockerfile
+    args:
+      INSTALL_AZURE_CLI: ${INSTALL_AZURE_CLI:-false}
   init: true
   stdin_open: true
   tty: true
@@ -15,6 +17,9 @@ x-agent: &agent
     - CLAUDE_CODE_OAUTH_TOKEN
     - OPENAI_API_KEY
     - TERM
+    - AZURE_DEVOPS_EXT_PAT
+    - ADO_ORG
+    - ADO_PROJECT
 
 x-eslint-rules: &eslint-rules
   type: bind
