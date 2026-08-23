@@ -1,0 +1,113 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  cat <<'EOF'
+Usage: ./sbx/run [--reset] <claude|codex|pi> [workspace]
+
+Examples:
+  ./sbx/run claude ../my-project
+  ./sbx/run pi ../my-project
+  ./sbx/run --reset codex ../my-project
+EOF
+}
+
+reset=false
+if [ "${1:-}" = "--reset" ]; then
+  reset=true
+  shift
+fi
+
+agent=${1:-}
+case "$agent" in
+claude | codex | pi) ;;
+*)
+  usage >&2
+  exit 2
+  ;;
+esac
+shift
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+env_file=${AGENT_ENV_FILE:-$repo_root/.env}
+if [ -f "$env_file" ]; then
+  set -a
+  . "$env_file"
+  set +a
+fi
+
+workspace=${1:-${WORKSPACE:-$repo_root}}
+if [ ! -d "$workspace" ]; then
+  printf 'Workspace does not exist: %s\n' "$workspace" >&2
+  exit 1
+fi
+workspace=$(CDPATH= cd -- "$workspace" && pwd -P)
+
+if ! command -v sbx >/dev/null 2>&1; then
+  printf '%s\n' 'Docker Sandboxes is required: https://docs.docker.com/ai/sandboxes/install/' >&2
+  exit 1
+fi
+
+workspace_name=$(basename -- "$workspace" | tr -c '[:alnum:]_. -' '-' | tr ' ' '-' | cut -c1-24)
+workspace_id=$(printf '%s' "$workspace" | cksum | awk '{print $1}')
+env_dir="$repo_root/.sandbox-cache/sbx/${agent}-${workspace_name}-${workspace_id}"
+shared_kit="$env_dir/kits/shared"
+pi_kit="$env_dir/kits/pi"
+
+rm -rf "$env_dir/kits"
+mkdir -p \
+  "$shared_kit/files/home/.agent-setup/skills" \
+  "$shared_kit/files/home/.agent-setup/config" \
+  "$pi_kit/files/home/.pi/agent"
+
+cp "$repo_root/sbx/kits/shared/spec.yaml" "$shared_kit/spec.yaml"
+cp "$repo_root/sbx/kits/pi/spec.yaml" "$pi_kit/spec.yaml"
+cp -R "$repo_root/skills"/. "$shared_kit/files/home/.agent-setup/skills/"
+cp -R "$repo_root/config"/. "$shared_kit/files/home/.agent-setup/config/"
+cp "$repo_root/config/pi/settings.json" "$pi_kit/files/home/.pi/agent/settings.json"
+cp "$repo_root/config/pi/models.json" "$pi_kit/files/home/.pi/agent/models.json"
+cp "$repo_root/config/pi/web-search.json" "$pi_kit/files/home/.pi/agent/web-search.json"
+cp "$repo_root/config/shared/AGENTS.md" "$pi_kit/files/home/.pi/agent/AGENTS.md"
+cp -R "$repo_root/config/pi/extensions" "$pi_kit/files/home/.pi/agent/extensions"
+cp -R "$repo_root/config/pi/prompts" "$pi_kit/files/home/.pi/agent/prompts"
+cp -R "$repo_root/config/pi/themes" "$pi_kit/files/home/.pi/agent/themes"
+
+escape_yaml() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+workspace_yaml=$(escape_yaml "$workspace")
+shared_kit_yaml=$(escape_yaml "$shared_kit")
+pi_kit_yaml=$(escape_yaml "$pi_kit")
+name="portable-${agent}-${workspace_name}-${workspace_id}"
+
+if [ "$agent" = pi ]; then
+  sbx_agent=portable-pi
+  cat >"$env_dir/.sbxenv.yaml" <<EOF
+schemaVersion: "1"
+name: "$name"
+agent: $sbx_agent
+workspace: "$workspace_yaml"
+kits:
+  - "$pi_kit_yaml"
+  - "$shared_kit_yaml"
+EOF
+else
+  sbx_agent=$agent
+  cat >"$env_dir/.sbxenv.yaml" <<EOF
+schemaVersion: "1"
+name: "$name"
+agent: $sbx_agent
+workspace: "$workspace_yaml"
+kits:
+  - "$shared_kit_yaml"
+EOF
+fi
+
+if [ "$reset" = true ]; then
+  sbx env rm "$env_dir" 2>/dev/null || true
+  printf 'Removed sandbox environment for %s at %s\n' "$agent" "$workspace"
+  exit 0
+fi
+
+exec sbx env run "$env_dir"

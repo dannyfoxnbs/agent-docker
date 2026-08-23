@@ -1,0 +1,79 @@
+name: portable-agents
+
+x-agent: &agent
+  image: portable-agents:local
+  build:
+    context: .
+    dockerfile: Dockerfile
+  init: true
+  stdin_open: true
+  tty: true
+  working_dir: /workspace
+  environment:
+    - ANTHROPIC_API_KEY
+    - ANTHROPIC_AUTH_TOKEN
+    - CLAUDE_CODE_OAUTH_TOKEN
+    - OPENAI_API_KEY
+    - TERM
+
+x-eslint-rules: &eslint-rules
+  type: bind
+  source: ${AGENT_ESLINT_RULES:-../agent-eslint-rules}
+  target: /opt/agent-eslint-rules
+  read_only: true
+
+services:
+  claude:
+    <<: *agent
+    command: ["claude"]
+    volumes:
+      - type: bind
+        source: ${WORKSPACE:-..}
+        target: /workspace
+      - type: bind
+        source: ../skills
+        target: /opt/agent-skills
+        read_only: true
+      - type: bind
+        source: ../config
+        target: /opt/agent-config
+      - *eslint-rules
+      - claude-state:/home/node/.claude
+
+  codex:
+    <<: *agent
+    command: ["codex"]
+    volumes:
+      - type: bind
+        source: ${WORKSPACE:-..}
+        target: /workspace
+      - type: bind
+        source: ../skills
+        target: /opt/agent-skills
+        read_only: true
+      - type: bind
+        source: ../config
+        target: /opt/agent-config
+      - codex-state:/home/node/.codex
+
+  pi:
+    <<: *agent
+    command: ["pi"]
+    volumes:
+      - type: bind
+        source: ${WORKSPACE:-..}
+        target: /workspace
+      - type: bind
+        source: ../skills
+        target: /opt/agent-skills
+        read_only: true
+      - type: bind
+        source: ../config
+        target: /opt/agent-config
+      - *eslint-rules
+      - pi-state:/home/node/.pi
+
+volumes:
+  claude-state:
+  codex-state:
+  pi-state:

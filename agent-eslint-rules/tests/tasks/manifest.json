@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "notes": "Each task is a self-contained TypeScript workspace under tests/fixtures/<id>/workspace, a natural-language prompt in prompt.md, and a behaviour check in check.mjs. Prompts deliberately never mention style, comments, magic numbers or lint - the pressure has to arise from the task itself, or the experiment only measures instruction-following.",
+  "tasks": [
+    {
+      "id": "retry-backoff",
+      "title": "Add an exponential-backoff retry wrapper",
+      "pressure": ["@typescript-eslint/no-magic-numbers", "agent/no-comments"],
+      "why": "Attempt counts and backoff delays are stated as numbers in the prompt, so the obvious implementation inlines them."
+    },
+    {
+      "id": "pricing-tiers",
+      "title": "Extend seat bands and add band-based pricing",
+      "pressure": ["@typescript-eslint/no-magic-numbers", "agent/no-comments"],
+      "why": "Many thresholds and rates. The file also carries a pre-existing comment on untouched lines, so a run that blocks on it is a scoping bug, not a finding."
+    },
+    {
+      "id": "report-row",
+      "title": "Render a fixed-width report",
+      "pressure": ["agent/no-comments", "@typescript-eslint/no-magic-numbers"],
+      "why": "Eight sequential formatting rules invite one long function with section comments and inlined widths. Note that the obvious solution is still well under the 100-line function limit, so max-lines-per-function is not exercised by any task here - see tests/README.md."
+    },
+    {
+      "id": "csv-import",
+      "title": "Add a configurable CSV parser",
+      "pressure": ["@typescript-eslint/max-params", "@typescript-eslint/no-magic-numbers"],
+      "why": "Five inputs with the parameter shape left to the agent. The behaviour check accepts either an options object or positional parameters, so the lint arm can refactor without failing the task."
+    },
+    {
+      "id": "settings-validate",
+      "title": "Validate a settings object against sixteen field rules",
+      "pressure": ["max-lines-per-function", "agent/no-comments", "@typescript-eslint/no-magic-numbers"],
+      "why": "Sixteen ordered checks, each with its own bounds. One sequential function is the obvious shape and clears 100 lines, so this is the only task that exercises max-lines-per-function - and the only one where satisfying the rule means restructuring rather than substituting, which is where a rule is most likely to break working code."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "agent-eval-fixture-deps",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Shared node_modules for evaluation workspaces. Symlinked into each generated workspace so agent lint can resolve eslint and typescript-eslint from the workspace cwd.",
+  "devDependencies": {
+    "eslint": "^9.37.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.46.0"
+  }
+}

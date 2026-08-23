@@ -1,0 +1,42 @@
+schemaVersion: "2"
+kind: sandbox
+name: portable-pi
+displayName: Pi with portable agent setup
+description: Pi coding agent installed inside a Docker Sandbox.
+
+sandbox:
+  image: docker/sandbox-templates:shell
+  entrypoint: [pi]
+
+agentInstructions:
+  filename: AGENTS.md
+  content: |
+    You are running inside a Docker Sandbox. The selected workspace is mounted for project work.
+
+permissions:
+  network:
+    allow:
+      - registry.npmjs.org
+      - "*.npmjs.org"
+      - pi.dev
+      - "*.pi.dev"
+      - api.anthropic.com
+      - console.anthropic.com
+      - claude.ai
+      - "*.claude.ai"
+      - api.openai.com
+      - auth.openai.com
+      - chatgpt.com
+      - "*.chatgpt.com"
+      - mcp.exa.ai
+      - github.com
+      - api.github.com
+      - raw.githubusercontent.com
+      - codeload.github.com
+      - objects.githubusercontent.com
+
+setup:
+  install:
+    - description: Install Pi
+      user: "1000"
+      command: npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.84.2

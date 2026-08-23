@@ -1,0 +1,16 @@
+{
+  "name": "agent-eslint-rules",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ESLint rules and agent-harness adapters that check edited code in a target project.",
+  "keywords": ["pi-package", "eslint", "coding-agent"],
+  "pi": {
+    "extensions": ["./extensions/pi-agent-lint.mjs"]
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "install-into": "node scripts/install.mjs",
+    "eval": "node tests/scripts/run-eval.mjs"
+  }
+}

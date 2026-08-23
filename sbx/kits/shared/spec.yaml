@@ -1,0 +1,26 @@
+schemaVersion: "2"
+kind: mixin
+name: portable-agent-setup
+displayName: Portable agent setup
+description: Installs the repository's skills and shared instructions into an agent sandbox.
+
+setup:
+  install:
+    - description: Install shared skills and instructions
+      user: "1000"
+      command: |
+        set -eu
+        source_dir=/home/agent/.agent-setup/skills
+        for target in /home/agent/.claude/skills /home/agent/.agents/skills; do
+          mkdir -p "$target"
+          cp -R "$source_dir"/. "$target"/
+        done
+
+        instructions=/home/agent/.agent-setup/config/shared/AGENTS.md
+        if [ -s "$instructions" ]; then
+          mkdir -p /home/agent/.claude /home/agent/.codex /home/agent/.pi/agent
+          cp "$instructions" /home/agent/.claude/CLAUDE.md
+          cp "$instructions" /home/agent/.codex/AGENTS.md
+          cp "$instructions" /home/agent/.pi/agent/AGENTS.md
+        fi
+

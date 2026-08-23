@@ -1,0 +1,13 @@
+{
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
+  "packages": [
+    "npm:pi-web-access@0.21.0"
+  ],
+  "defaultThinkingLevel": "low",
+  "hideThinkingBlock": false,
+  "theme": "dark",
+  "tuiMode": "regular",
+  "enableSkillCommands": true,
+  "lastChangelogVersion": "0.84.2"
+}

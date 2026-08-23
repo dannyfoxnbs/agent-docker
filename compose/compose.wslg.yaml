@@ -1,0 +1,25 @@
+services:
+  claude:
+    environment: &wslg-environment
+      - DIFF_REVIEW_FORCE_LINUX=1
+      - DISPLAY=${DISPLAY:-:0}
+      - GLIMPSE_BACKEND=chromium
+      - PULSE_SERVER=${PULSE_SERVER:-unix:/mnt/wslg/PulseServer}
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/mnt/wslg/runtime-dir}
+    shm_size: 1gb
+    volumes: &wslg-volumes
+      - type: bind
+        source: /mnt/wslg
+        target: /mnt/wslg
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+  codex:
+    environment: *wslg-environment
+    shm_size: 1gb
+    volumes: *wslg-volumes
+  pi:
+    environment: *wslg-environment
+    shm_size: 1gb
+    volumes: *wslg-volumes

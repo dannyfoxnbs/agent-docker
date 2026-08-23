@@ -1,0 +1,6 @@
+{
+  "workflow": "auto-summary",
+  "ssrf": {
+    "trustEnvProxy": true
+  }
+}

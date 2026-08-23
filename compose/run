@@ -1,0 +1,63 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  cat <<'EOF'
+Usage: ./compose/run [--build] <claude|codex|pi> [workspace]
+
+Examples:
+  ./compose/run claude ../my-project
+  ./compose/run pi ../my-project
+  ./compose/run --build codex ../my-project
+EOF
+}
+
+build=false
+if [ "${1:-}" = "--build" ]; then
+  build=true
+  shift
+fi
+
+agent=${1:-}
+case "$agent" in
+  claude|codex|pi) ;;
+  *) usage >&2; exit 2 ;;
+esac
+shift
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+env_file=${AGENT_ENV_FILE:-$repo_root/.env}
+if [ -f "$env_file" ]; then
+  set -a
+  . "$env_file"
+  set +a
+fi
+
+workspace=${1:-${WORKSPACE:-$repo_root}}
+if [ ! -d "$workspace" ]; then
+  printf 'Workspace does not exist: %s\n' "$workspace" >&2
+  exit 1
+fi
+workspace=$(CDPATH= cd -- "$workspace" && pwd -P)
+
+if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
+  printf '%s\n' 'Docker with the Compose plugin is required.' >&2
+  exit 1
+fi
+
+compose_file="$repo_root/compose/compose.yaml"
+set -- -f "$compose_file"
+if [ -f "$env_file" ]; then
+  set -- --env-file "$env_file" "$@"
+fi
+if [ -d /mnt/wslg ] && [ -d /tmp/.X11-unix ]; then
+  set -- "$@" -f "$repo_root/compose/compose.wslg.yaml"
+fi
+
+if [ "$build" = true ]; then
+  WORKSPACE="$workspace" docker compose "$@" build --pull --no-cache
+elif ! docker image inspect portable-agents:local >/dev/null 2>&1; then
+  WORKSPACE="$workspace" docker compose "$@" build --pull
+fi
+
+exec env WORKSPACE="$workspace" docker compose "$@" run --rm "$agent"
