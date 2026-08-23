@@ -54,9 +54,44 @@ if [ -d /mnt/wslg ] && [ -d /tmp/.X11-unix ]; then
   set -- "$@" -f "$repo_root/compose/compose.wslg.yaml"
 fi
 
+# The image is built once and reused, so anything that changes what the image
+# should contain has to trigger a rebuild by itself. Cached layers make that
+# cheap when only the entrypoint changed.
+image_needs_build() {
+  if ! docker image inspect portable-agents:local >/dev/null 2>&1; then
+    printf '%s\n' 'Building the agent image. This happens once.' >&2
+    return 0
+  fi
+
+  want_azure_cli=${INSTALL_AZURE_CLI:-false}
+  have_azure_cli=$(docker image inspect \
+    --format '{{index .Config.Labels "com.portable-agents.azure-cli"}}' \
+    portable-agents:local 2>/dev/null)
+  if [ "$want_azure_cli" != "$have_azure_cli" ]; then
+    printf 'Rebuilding: INSTALL_AZURE_CLI is %s, the image was built with %s.\n' \
+      "$want_azure_cli" "${have_azure_cli:-an older image without the label}" >&2
+    return 0
+  fi
+
+  # date -d is GNU-only; where it is unavailable the staleness check is skipped
+  # rather than guessed at, and --build stays the explicit escape hatch.
+  created=$(docker image inspect --format '{{.Created}}' portable-agents:local 2>/dev/null)
+  image_epoch=$(date -d "$created" +%s 2>/dev/null) || return 1
+  for input in "$repo_root/compose/Dockerfile" "$repo_root/compose/entrypoint.sh"; do
+    input_epoch=$(date -r "$input" +%s 2>/dev/null) || continue
+    if [ "$input_epoch" -gt "$image_epoch" ]; then
+      printf 'Rebuilding: %s changed since the image was built.\n' \
+        "${input#"$repo_root"/}" >&2
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 if [ "$build" = true ]; then
   WORKSPACE="$workspace" docker compose "$@" build --pull --no-cache
-elif ! docker image inspect portable-agents:local >/dev/null 2>&1; then
+elif image_needs_build; then
   WORKSPACE="$workspace" docker compose "$@" build --pull
 fi
 

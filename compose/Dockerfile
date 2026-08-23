@@ -58,6 +58,8 @@ RUN if [ "${INSTALL_AZURE_CLI}" = "true" ]; then \
       && az extension add --name azure-devops --system; \
     fi
 
+LABEL com.portable-agents.azure-cli="${INSTALL_AZURE_CLI}"
+
 COPY entrypoint.sh /usr/local/bin/portable-agent
 RUN chmod 0755 /usr/local/bin/portable-agent \
     && mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.pi/agent /home/node/.agents \
