@@ -58,7 +58,9 @@ RUN if [ "${INSTALL_AZURE_CLI}" = "true" ]; then \
       && az extension add --name azure-devops --system; \
     fi
 
+ARG BUILD_INPUTS_SHA=unknown
 LABEL com.portable-agents.azure-cli="${INSTALL_AZURE_CLI}"
+LABEL com.portable-agents.inputs="${BUILD_INPUTS_SHA}"
 
 COPY entrypoint.sh /usr/local/bin/portable-agent
 RUN chmod 0755 /usr/local/bin/portable-agent \

@@ -45,10 +45,9 @@ route I want, confirm it, then do only that route.
 5. **Do the route.**
 
    **Compose.** `./compose/run <claude|codex|pi> [workspace]`. The first run
-   builds the image. Tell me a `.env` is optional — `WORKSPACE` and
-   `AGENT_ESLINT_RULES` both default, and `env.example` documents every variable.
-   Copy it with `cp env.example .env` only if I want defaults rather than passing
-   a workspace each time.
+   builds the image and creates `.env` from `env.example`. Every variable in it
+   defaults except the Azure DevOps PAT, so walk me through step 6 before the
+   first launch and let me start agents myself afterwards.
 
    **Sandboxes.** `./sbx/run <claude|codex|pi> [workspace]`. Tell me that an
    existing sandbox keeps its creation-time snapshot of skills and config, so
@@ -63,11 +62,16 @@ route I want, confirm it, then do only that route.
    track the clone, and say which you used. Do not copy anything from `config/`
    into my host harness without asking: it would overwrite my real settings.
 
-6. **Point out what needs a secret, without asking me for one.** The
-   `*-azure-devops-*` skills read `AZURE_DEVOPS_EXT_PAT` from the environment and
-   fail without it; `ADO_ORG` and `ADO_PROJECT` are optional overrides. Never
-   write a token, PAT, OAuth credential, or session file into this repository or
-   into `config/`.
+6. **Get the Azure DevOps PAT into `.env` before Docker runs, if I want those
+   skills.** Ask me whether I use the `*-azure-devops-*` skills. If I do, tell me
+   to create a PAT with the Work Items (Read) and Code (Read & Write) scopes and
+   to paste it into `AZURE_DEVOPS_EXT_PAT` in `.env` myself. Do not ask me to
+   give you the token, do not read it back, and do not write it for me.
+   `./compose/run` warns on startup while no PAT is available, so a missing one is
+   visible before an agent starts rather than later as an authentication error.
+   `ADO_ORG` and `ADO_PROJECT` are optional overrides that already default to the
+   organisation the skills were written against. Never write a token, PAT, OAuth
+   credential, or session file into this repository or into `config/`.
 
 7. **Mention the per-edit lint rules if I chose a containerised route.**
    `agent-eslint-rules/` checks the lines an agent just wrote, in Claude via a
@@ -104,8 +108,10 @@ next container start.
 
 **An Azure DevOps skill fails on authentication.** `AZURE_DEVOPS_EXT_PAT` is not
 reaching the container. Set it in `.env` or export it on the host; Compose passes
-it through. The PAT needs Work Items (Read) and Code (Read & Write) for the full
-read/write/review chain.
+it through, and `./compose/run` warns at startup when it finds no PAT at all. The
+PAT needs Work Items (Read) and Code (Read & Write) for the full
+read/write/review chain. `read-azure-devops-ticket` additionally needs the `az`
+CLI in the image: set `INSTALL_AZURE_CLI=true` and `./compose/run` rebuilds.
 
 **A workspace path is wrong.** A workspace argument always beats `WORKSPACE` in
 `.env`. A relative `WORKSPACE` resolves against your current directory, not this

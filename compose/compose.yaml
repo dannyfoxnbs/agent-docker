@@ -7,6 +7,7 @@ x-agent: &agent
     dockerfile: Dockerfile
     args:
       INSTALL_AZURE_CLI: ${INSTALL_AZURE_CLI:-false}
+      BUILD_INPUTS_SHA: ${BUILD_INPUTS_SHA:-unknown}
   init: true
   stdin_open: true
   tty: true

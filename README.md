@@ -30,7 +30,7 @@ Start with SBX for the stronger agent boundary, then use Compose to compare simp
 
 ## Workspace and paths
 
-Copy [`env.example`](env.example) to `.env` in the repository root to set defaults instead of passing them every time:
+`./compose/run` creates `.env` from [`env.example`](env.example) on its first run, so you have a file to edit. You can also make it yourself:
 
 ```sh
 cp env.example .env
@@ -82,15 +82,17 @@ Thresholds live in `agent-eslint-rules/eslint.config.agent.mjs`. See [`compose/R
 
 ## Azure DevOps skills
 
-The `*-azure-devops-*` skills in [`skills/`](skills/) read and write Azure DevOps work items and pull requests — tickets, PR diffs, review comments, PR descriptions, opening a PR, and a risk review that chains them. They talk to the REST API with the Python standard library, so they need no `az` CLI and no pip packages, only a Personal Access Token.
+The `*-azure-devops-*` skills in [`skills/`](skills/) read and write Azure DevOps work items and pull requests — tickets, PR diffs, review comments, PR descriptions, opening a PR, and a risk review that chains them. They need a Personal Access Token and no pip packages.
 
-Set `AZURE_DEVOPS_EXT_PAT` (plus `ADO_ORG` and `ADO_PROJECT` for your own organisation) in `.env` and the Compose variant passes them into the container. The `az` CLI is available on request for ad-hoc shell work:
+Set `AZURE_DEVOPS_EXT_PAT` in `.env` before your first run. `./compose/run` creates `.env` from `env.example` when it is missing and warns on startup when no PAT is available, so the problem surfaces before Docker starts rather than later inside a skill. `ADO_ORG` and `ADO_PROJECT` already default to the organisation the skills were written against.
+
+All but one of these skills use the REST API through the Python standard library. `read-azure-devops-ticket` shells out to `az boards work-item`, so it alone needs the `az` CLI built into the image:
 
 ```sh
 INSTALL_AZURE_CLI=true ./compose/run --build claude ~/repos/my-ado-project
 ```
 
-It adds roughly 900MB to the image, which is why it is off by default. See [`skills/README.md`](skills/README.md#azure-devops-skills) for PAT scopes and the draft → open → review chain.
+It adds roughly 900MB to the image, which is why it is off by default. `./compose/run` records the setting on the image and rebuilds by itself when you change it. See [`skills/README.md`](skills/README.md#azure-devops-skills) for PAT scopes and the draft → open → review chain.
 
 ## Authentication
 

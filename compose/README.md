@@ -18,7 +18,9 @@ The workspace defaults to this repository when omitted. Agent packages use their
 ./compose/run --build claude ../my-project
 ```
 
-Normal launches reuse the existing image so startup remains fast.
+The first run also creates `.env` from `env.example` if you have not made one, so the file to edit exists and is named in any notice about it.
+
+Normal launches reuse the existing image so startup remains fast, except when the image no longer matches what it should contain. `./compose/run` stamps the image with a hash of `Dockerfile` and `entrypoint.sh` plus the `INSTALL_AZURE_CLI` value, and rebuilds by itself when either stops matching. Editing the entrypoint or flipping `INSTALL_AZURE_CLI` therefore needs no `--build`, and touching a file without changing it does not trigger anything.
 
 You can also use Compose directly:
 
@@ -38,17 +40,21 @@ Never add credentials to `compose.yaml`, the image, or `config/`. Harness settin
 
 ## Azure DevOps skills
 
-`AZURE_DEVOPS_EXT_PAT`, `ADO_ORG`, and `ADO_PROJECT` are passed through from the host or `.env`, which is all the `*-azure-devops-*` skills need — they use the REST API through the Python standard library. `ADO_PAT_FILE` is not passed, because a host path is not a container path.
+Put a PAT in `AZURE_DEVOPS_EXT_PAT` in `.env` before the first run. `./compose/run` creates `.env` from `env.example` when it is missing, and says so on startup when no PAT is set — before Docker starts, rather than later as an authentication error inside a skill. `ADO_ORG` and `ADO_PROJECT` are passed through the same way and already default to the organisation the skills were written against.
+
+The token lives only in `.env`, which is git-ignored, and reaches the container as an environment variable. Nothing is written into the image or `config/`.
+
+Five of the six skills with scripts use the REST API through the Python standard library and need nothing else. `read-azure-devops-ticket` is the exception: it shells out to `az boards work-item`, so it needs the `az` CLI in the image. `ADO_ORG` and `ADO_PROJECT` default to the organisation the skills were written against.
 
 The PR skills shell out to `git`, so launch with the PR's clone as the workspace.
 
-The `az` CLI is not in the image by default; it adds roughly 900MB and no skill calls it. Build it in, with its `azure-devops` extension, when you want it for ad-hoc shell work:
+The `az` CLI is not in the image by default; it adds roughly 900MB. Build it in, with its `azure-devops` extension, when you want `read-azure-devops-ticket` or ad-hoc shell work:
 
 ```sh
 INSTALL_AZURE_CLI=true ./compose/run --build claude ~/repos/my-ado-project
 ```
 
-The flag is a build argument, so it applies on a `--build` run and persists in the image until the next rebuild without it.
+The flag is a build argument recorded on the image, so `./compose/run` rebuilds on its own the first time you set or unset it — `--build` above is only there to also pull fresh base layers.
 
 ## Per-edit lint rules
 

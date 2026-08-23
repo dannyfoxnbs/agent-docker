@@ -27,6 +27,14 @@ shift
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
 env_file=${AGENT_ENV_FILE:-$repo_root/.env}
+
+# First run gets a .env of its own, so the file to edit exists and is named in
+# the notice below rather than being something the reader has to go and find.
+if [ ! -f "$env_file" ] && [ -f "$repo_root/env.example" ]; then
+  cp "$repo_root/env.example" "$env_file"
+  printf 'Created %s from env.example. Edit it to set defaults.\n' "$env_file" >&2
+fi
+
 if [ -f "$env_file" ]; then
   set -a
   . "$env_file"
@@ -54,9 +62,29 @@ if [ -d /mnt/wslg ] && [ -d /tmp/.X11-unix ]; then
   set -- "$@" -f "$repo_root/compose/compose.wslg.yaml"
 fi
 
+# Said before Docker does anything, because the failure it prevents otherwise
+# turns up much later, inside a skill, as an authentication error.
+if [ -z "${AZURE_DEVOPS_EXT_PAT:-}" ]; then
+  printf '%s\n' \
+    'No Azure DevOps PAT set. The *-azure-devops-* skills will fail until you set' \
+    "AZURE_DEVOPS_EXT_PAT in $env_file. Nothing else is affected." >&2
+fi
+
 # The image is built once and reused, so anything that changes what the image
-# should contain has to trigger a rebuild by itself. Cached layers make that
-# cheap when only the entrypoint changed.
+# should contain has to trigger a rebuild by itself. A hash of the build inputs
+# is stamped on the image as a label, because a fully cached rebuild does not
+# refresh the image's creation time and would otherwise nag on every run.
+hash_build_inputs() {
+  cat "$repo_root/compose/Dockerfile" "$repo_root/compose/entrypoint.sh" 2>/dev/null \
+    | { sha256sum 2>/dev/null || shasum -a 256; } \
+    | awk '{print $1}'
+}
+
+image_label() {
+  docker image inspect --format "{{index .Config.Labels \"$1\"}}" \
+    portable-agents:local 2>/dev/null
+}
+
 image_needs_build() {
   if ! docker image inspect portable-agents:local >/dev/null 2>&1; then
     printf '%s\n' 'Building the agent image. This happens once.' >&2
@@ -64,30 +92,23 @@ image_needs_build() {
   fi
 
   want_azure_cli=${INSTALL_AZURE_CLI:-false}
-  have_azure_cli=$(docker image inspect \
-    --format '{{index .Config.Labels "com.portable-agents.azure-cli"}}' \
-    portable-agents:local 2>/dev/null)
+  have_azure_cli=$(image_label com.portable-agents.azure-cli)
   if [ "$want_azure_cli" != "$have_azure_cli" ]; then
     printf 'Rebuilding: INSTALL_AZURE_CLI is %s, the image was built with %s.\n' \
       "$want_azure_cli" "${have_azure_cli:-an older image without the label}" >&2
     return 0
   fi
 
-  # date -d is GNU-only; where it is unavailable the staleness check is skipped
-  # rather than guessed at, and --build stays the explicit escape hatch.
-  created=$(docker image inspect --format '{{.Created}}' portable-agents:local 2>/dev/null)
-  image_epoch=$(date -d "$created" +%s 2>/dev/null) || return 1
-  for input in "$repo_root/compose/Dockerfile" "$repo_root/compose/entrypoint.sh"; do
-    input_epoch=$(date -r "$input" +%s 2>/dev/null) || continue
-    if [ "$input_epoch" -gt "$image_epoch" ]; then
-      printf 'Rebuilding: %s changed since the image was built.\n' \
-        "${input#"$repo_root"/}" >&2
-      return 0
-    fi
-  done
+  if [ -n "$BUILD_INPUTS_SHA" ] && [ "$BUILD_INPUTS_SHA" != "$(image_label com.portable-agents.inputs)" ]; then
+    printf '%s\n' 'Rebuilding: the Dockerfile or entrypoint changed.' >&2
+    return 0
+  fi
 
   return 1
 }
+
+BUILD_INPUTS_SHA=$(hash_build_inputs)
+export BUILD_INPUTS_SHA
 
 if [ "$build" = true ]; then
   WORKSPACE="$workspace" docker compose "$@" build --pull --no-cache
