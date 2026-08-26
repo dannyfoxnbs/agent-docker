@@ -70,7 +70,7 @@ Only `.ts`, `.tsx`, `.js`, and `.jsx` files are checked, and only lines that dif
 
 ## MCP servers
 
-No MCP servers are configured. Drop a `config/claude/mcp.json` in the usual `{"mcpServers": {...}}` shape and the entrypoint passes it to Claude as `--mcp-config`, alongside the existing `--settings`. No file, no flag.
+`config/claude/mcp.json` declares the Breeze MCP server (`breeze-mcp`, the remote HTTP endpoint the Breeze plugin would otherwise carry). Add more servers there in the usual `{"mcpServers": {...}}` shape; the entrypoint passes the file to Claude as `--mcp-config`, alongside the existing `--settings`. No file, no flag.
 
 Prefer declaring a remote endpoint here over installing a plugin that carries one: the container has no SSH key, so a marketplace cloned over `git@github.com:` cannot be fetched from inside it. Servers needing a login are authenticated once per state volume with `/mcp`; credentials stay in the `claude-state` volume, never in `config/`.
 
