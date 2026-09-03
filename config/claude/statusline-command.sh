@@ -206,7 +206,8 @@ fi
 # went cold — a red "expired" on return to a session is the cue to compact.
 age_part=""
 if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
-	ts=$(stat -c %Y "$transcript_path" 2>/dev/null)
+	# GNU stat on Linux (container), BSD stat on macOS (host).
+	ts=$(stat -c %Y "$transcript_path" 2>/dev/null || stat -f %m "$transcript_path" 2>/dev/null)
 	if [ -n "$ts" ] && [ "$ts" -eq "$ts" ] 2>/dev/null; then
 		now_secs=$(date +%s 2>/dev/null)
 		elapsed=$((now_secs - ts))

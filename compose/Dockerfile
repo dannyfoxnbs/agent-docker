@@ -6,7 +6,17 @@ ARG PI_VERSION=latest
 ARG DIFF_REVIEW_REF=main
 ARG INSTALL_AZURE_CLI=false
 
-RUN apt-get update \
+# Fetch Debian packages over HTTPS rather than apt's default plain HTTP. Some
+# networks — notably Docker Desktop's built-in transparent proxy — silently drop
+# container egress on port 80, which turns `apt-get update` into a ~12 minute
+# stall ending in "Connection failed" on every index. TLS peer verification is
+# off for this layer only because the base image ships no CA bundle yet; apt
+# still GPG-verifies every InRelease signature, so packages stay authenticated.
+# The override is removed once ca-certificates lands, so later layers verify.
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' \
+      /etc/apt/sources.list.d/debian.sources \
+    && echo 'Acquire::https::Verify-Peer "false";' > /etc/apt/apt.conf.d/99no-verify-peer \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
       bash \
       ca-certificates \
@@ -19,6 +29,7 @@ RUN apt-get update \
       ripgrep \
       sudo \
       tmux \
+    && rm -f /etc/apt/apt.conf.d/99no-verify-peer \
     && rm -rf /var/lib/apt/lists/* \
     && echo 'node ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/node
 
