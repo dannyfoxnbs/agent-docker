@@ -8,9 +8,11 @@ disable-model-invocation: true
 
 Answer the user's question from `docs/`, citing `file:line` for every claim.
 
-- `docs/sirius-playbook.md` — the shape in seven pages.
-- `docs/sirius-guidelines/` — the standard, split by section: `00-contents` (the map), then `01-document-overview` … `15-troubleshooting`. `03-glossary` defines the vocabulary.
-- `docs/sirius-runbook.md` — fifteen fields per agent, per lane.
+Three corpora, each split into a folder whose `00-contents.md` is its map:
+
+- `docs/sirius-playbook/` — the shape in seven pages, `01-introduction-glossary` … `07-readiness-adoption`.
+- `docs/sirius-guidelines/` — the standard, `01-document-overview` … `15-troubleshooting`. `03-glossary` defines the vocabulary.
+- `docs/sirius-runbook/` — one file per agent, `01-epic-agent-suite` … `21-design-capture`, fifteen fields each.
 
 Prose exports with no markdown headings — navigate with `grep -rn` then `sed -n` a window around the hit. The Guidelines carries bare numbered markers (`1.2`, `10.2`) on their own line.
 

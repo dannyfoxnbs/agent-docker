@@ -1,0 +1,19 @@
+17
+QA Agent
+The owner's guide is the source. qa-agent Runbook v1.0, written by Arief Rahman Hakim, covers installation, setup and the stacks it supports. This page is the fifteen fields for someone switching the agent on; that one is the full guide for someone learning it. Where they disagree, follow the owner's. Captured 29 Aug 2026.
+
+Field	
+Purpose	Turns an approved test case into a running automated test, executes it, repairs it when a button moves, reports the result, files the evidence on the right ticket, and opens a pull request
+Owner / backup	Arief Rahman Hakim / Yohanes Christianto. The only agent in this catalogue with a named backup
+Maturity / risk	Establishing. It is not a merge gate. You give it one ticket key; it does the rest and writes down everything it did
+Trigger	One command in Claude Code, and that is all today. A status transition into QA review is the stated target rather than current behaviour, so a team waiting for the ticket to trigger it will wait indefinitely. Each of the five sub-phases can also be called on its own
+Trigger syntax	Full flow in Claude Code: /qa-agent <work_item_key>. Individual stages: /qa-agent-codegen <ticket_key> /qa-agent-run <ticket_key> /qa-agent-heal <ticket_key> /qa-agent-defect <ticket_key> /qa-agent-pr <ticket_key>
+Prerequisites	More than any other agent here, and all of it per machine. Node 20 or later with npm — the runner refuses to start below 20. Git and the GitHub command-line client, authenticated, because the pull request is opened through it. Playwright, with its browsers fetched during setup; Chromium only. A Qase project and token. SSH access to the frontend repository, which selector mining needs. A staging environment. And the tracker hosting the delivery envelope — a parent with a manual-test child that names the plan, an automation child, and frontend and backend children for defects to route to. The tracker and test style are chosen once, at setup: Jira with Qase, or Azure Boards with Azure Test Plans, and TDD or BDD. It is a scaffolding decision, not a runtime switch, so a team that picks wrong re-scaffolds rather than reconfigures
+Input	Test scenarios written upstream by the Acceptance Test agent, as a Qase plan. It does not invent tests, and it never rewrites the plan's cases. It does write back one thing: a case that passes is flipped to automated automatically
+Expected output	Playwright code against the live frontend, a Chromium run, results uploaded to Qase, self-healed selectors, defects routed to the tracker, and a pull request
+Review & logging	The review phase runs automatically on the status transition and writes unreviewed. The five sub-phases each need a person to ask for them
+Common failures → fix	The plan is not marked for automation, so there is nothing to pick up. A selector moves and the healer repairs it, which is expected rather than a failure
+Monitor	Runs recorded, plus the Qase run and the pull request
+Re-run safety	Safe. Re-running re-executes against the same plan. /qa-agent:upgrade is the exception: it pulls fresh framework files and overwrites the plugin-owned ones — the agent contract, the Playwright and TypeScript configuration, the shared utilities, the scripts and the CI workflow. Your tests, page objects, locators, features, environment file and app profile are repo-owned and never touched. Anything you tuned in a plugin-owned file is lost on upgrade, which is the one way to lose work here
+Known gaps	1 run in the last graduation period, untagged. The platform's own registry marks this as a legacy report agent superseded by Acceptance Test for new work, while keeping it deployed. It installs as a plugin from the internal marketplace, which is a different activation route from every cloud agent here
+Source	The QA Agent runbook v1.0, and the platform documentation

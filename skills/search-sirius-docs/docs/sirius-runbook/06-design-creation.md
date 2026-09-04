@@ -1,0 +1,17 @@
+6
+Design Creation
+Field	
+Purpose	Takes one reviewed design ticket and builds three things in the design repository: the prototype, the developer handoff carrying the manifest, and the change log. Then delivers them on the ticket and iterates on comments
+Owner / backup	Maureen / none named. Approval is no longer restricted to her account — that identity check was removed, because the webhook payload does not reliably carry the commenter's address and so could not be verified
+Maturity / risk	Disputed, and worth resolving before a team relies on it. Its own runbook says specified, never run, with seven open blockers; the platform documentation describes behaviour fixed against real tickets. Not a gate agent — every output is reviewed on the ticket and again at the pull request. It never merges and never writes to the main branch
+Trigger	Two implementations. The platform agent runs on the status transition into the design-creation status, and a duplicate transition on a delivered ticket is rejected and recorded as a failed run. The local variant is a command in Claude Code with no status hook and no comment poller at all. Either way, revision is driven by a comment verb rather than by re-running
+Trigger syntax	@design-creation-agent;refine;<feedback> @design-creation-agent;rework;<yes/no>;<KG/AG/HG>;<feedback> @design-creation-agent;accept;<manual_effort_hours>
+Prerequisites	A design ticket a person has read; a resolvable target page with a real base; the design repository present; an authenticated command-line client
+Input	The design ticket, its comments and attachments, the sprint field, the parent Epic's two manifests, the linked impact analysis, and the design repository's constraint pack
+Expected output	On the ticket: a pull request, two HTML attachments, a final design table in the description, and one comment covering deviations, change log and open items. In the repository on a ticket branch: the prototype, the handoff, metadata, a regenerated registry entry and an immutable sprint snapshot
+Review & logging	Review happens on the ticket and that thread is the record. The approval verb is accept with the hours you spent — approve was retired outright, so a designer following an older note gets a usage reply rather than a finished build. On the platform path a well-formed comment fills the previous run's log entry automatically; the local variant records nothing
+Common failures → fix	It stops because a capture fails verification — re-capture with Design Capture; the stop is correct behaviour. No attachments — the Jira token file is absent. Sprint number ambiguous — the same fix
+Monitor	No dashboard and no run-log page. Monitor the branch and its pull request, the ticket, and the repository's own check command
+Re-run safety	Idempotent, and re-running is how a revision works: same branch, same files, attachments replaced, change log amended rather than appended. A ticket with a pull request and no new instruction is not re-run — it reports and stops. Pause after two consecutive failures rather than running a third time.
+Known gaps	Accessibility is never verified — the check is recorded as skipped on every run, and a skip is never reported as a pass. The design repository has no branch protection, so the never-merge rule is enforced by the agent's own code rather than by the repository. Most page masters are still blank scaffolds
+Source	The Design Creation runbook and the platform documentation
