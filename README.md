@@ -1,130 +1,95 @@
 # Portable agent setup
 
-A standalone collection of agent skills plus two isolated ways to try the same basic Claude Code, Codex, and Pi setup.
+The agent skills, configuration, and hooks I use day to day, shared so you can take the pieces you want.
 
-- [`skills/`](skills/) is the canonical skill collection and does not depend on Docker or Docker Sandboxes. See [`skills/README.md`](skills/README.md) to lift skills into an existing setup.
-- [`config/`](config/) holds portable, non-secret harness configuration.
-- [`agent-eslint-rules/`](agent-eslint-rules/) is a vendored copy of the stricter per-edit lint rules, wired into the Compose variant's Claude and Pi.
-- [`sbx/`](sbx/) runs agents in Docker Sandbox microVMs.
-- [`compose/`](compose/) runs all three agents from one conventional Docker image.
+## What's here
 
-Neither variant requires Claude Code, Codex, or Pi to be installed on the host.
+- [`skills/`](skills/): Agent Skills such as TDD, Angular coding and testing, grilling, SonarCloud coverage, and a group of Azure DevOps skills for tickets and PRs. See [`skills/README.md`](skills/README.md).
+- [`config/`](config/): harness configuration you can share safely. That covers instructions shared across harnesses, Claude Code settings, slash commands, the status line, and MCP servers, plus Pi extensions and Codex defaults. See [`config/README.md`](config/README.md).
+- [`config/claude/hooks/`](config/claude/hooks/): Claude Code hooks. They lint each edit, review diffs, notify you when you are away, and update the status line.
+- [`agent-eslint-rules/`](agent-eslint-rules/): stricter lint rules that check only the lines an agent just wrote (no comments, short functions, few parameters, no magic numbers).
+- [`compose/`](compose/) and [`sbx/`](sbx/): optional ways to run Claude Code, Codex, and Pi in Docker so they don't touch your host.
 
-## Hand it to an agent
+## Pick what you want
 
-Paste [`PROMPT.md`](PROMPT.md) into an agent session opened in this clone. It works out whether you want Compose, Docker Sandboxes, or the skills copied into a harness already on your machine, confirms the paths, and then does only that.
+You don't need to copy the whole repository. Each skill, hook, and config file stands on its own, so take what is useful and leave the rest. Most people only want a few skills.
 
-## Choose a variant
-
-| | Docker Sandboxes | Docker Compose |
-|---|---|---|
-| Host requirement | `sbx`, Docker login, hardware virtualisation | Docker Engine/Desktop with Compose |
-| Isolation | Separate microVM and kernel | Ordinary container isolation |
-| Agent installation | Built-in Claude/Codex templates; Pi installed by a kit | All three installed in one image |
-| Skills/config updates | Snapshot when a sandbox is created | Live read-only bind mounts |
-| Subscription login | Best integration, especially Codex | Works, but browser callbacks can be less convenient |
-| Resource use | Higher | Lower |
-| Maturity | SBX environments and kits are experimental | Stable Docker Compose workflow |
-
-Start with SBX for the stronger agent boundary, then use Compose to compare simplicity and resource use.
-
-## Workspace and paths
-
-`./compose/run` creates `.env` from [`env.example`](env.example) on its first run, so you have a file to edit. You can also make it yourself:
+Symlink a skill to keep it updating with `git pull`, or copy it if you plan to edit your own version:
 
 ```sh
-cp env.example .env
+ln -s ~/repos/agent-docker/skills/tdd ~/.claude/skills/tdd               # every project
+ln -s ~/repos/agent-docker/skills/tdd <project>/.claude/skills/tdd       # one project
 ```
 
-| Variable | Effect |
+[`skills/README.md`](skills/README.md) lists the skill directories for Pi and opencode. If you'd rather an agent do the setup, paste [`PROMPT.md`](PROMPT.md) into a session opened in this clone.
+
+## My setup
+
+What I run day to day, for context. None of it is required.
+
+| Tool | Used for |
 |---|---|
-| `WORKSPACE` | Project mounted at `/workspace` when no workspace argument is given. Absolute path or `~`. |
-| `AGENT_ESLINT_RULES` | Location of the lint rules clone. A relative value resolves against `compose/`. |
-| `AZURE_DEVOPS_EXT_PAT` | Personal Access Token used by the Azure DevOps skills. |
-| `ADO_ORG`, `ADO_PROJECT` | Organisation and default project those skills target. |
-| `INSTALL_AZURE_CLI` | Build the `az` CLI into the Compose image. Off by default. |
+| [WezTerm](https://wezterm.org) | Terminal |
+| Herdr | Terminal multiplexer for running several agent sessions side by side |
+| [Neovim](https://neovim.io) | Editor |
+| [lazygit](https://github.com/jesseduffield/lazygit) | Git TUI for reviewing and staging what agents change |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Main coding agent |
+| Pi | Second coding agent, for local models and GitHub Copilot models |
 
-Both `./compose/run` and `./sbx/run` read `.env`, and `./compose/run` passes it to Compose as `--env-file` so plain `docker compose` sees the same values. A workspace given on the command line always wins. `.env` is git-ignored; `AGENT_ENV_FILE` points either runner at a different file.
+All of this runs on Windows under WSL2.
 
-## Docker Sandboxes
+## Chrome DevTools MCP
 
-Install and authenticate Docker Sandboxes using the [official installation guide](https://docs.docker.com/ai/sandboxes/install/), then run:
+The [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) lets an agent drive a real browser. It can click through the app, read the console and network requests, and take screenshots. I use it all the time to check frontend changes. You log in yourself, and the agent takes over from there.
 
-```sh
-./sbx/run claude ../my-project
-./sbx/run codex ../my-project
-./sbx/run pi ../my-project
-```
-
-The first run downloads the relevant template and creates a persistent sandbox. Later runs reattach to it.
-
-See [`sbx/README.md`](sbx/README.md) for authentication, configuration behaviour, and resetting after skill changes.
-
-## Docker Compose
-
-With Docker and the Compose plugin installed:
+On WSL it has to run on the Windows side. WSL can't reach a Windows Chrome debug port, and a headed Chromium inside WSL is unreliable. Run this from the project you want it in:
 
 ```sh
-./compose/run claude ../my-project
-./compose/run codex ../my-project
-./compose/run pi ../my-project
+claude mcp add chrome-devtools -- cmd.exe /c npx -y -p node@22 -p chrome-devtools-mcp@latest \
+  chrome-devtools-mcp --no-performance-crux --no-usage-statistics
 ```
 
-The first run builds the shared image. Agent credentials and sessions persist in named volumes while the selected project is mounted at `/workspace`.
+`-p node@22` covers an older Windows Node, since the MCP needs Node 22. The two `--no-*` flags stop internal URLs from being sent to Google. On macOS or native Linux, drop the `cmd.exe /c` and the `node@22` package.
 
-See [`compose/README.md`](compose/README.md) for authentication and isolation details.
-
-## Per-edit lint rules
-
-The Compose variant checks the lines an agent just wrote against [`agent-eslint-rules/`](agent-eslint-rules/): no comments, 100-line functions, 3 parameters, no magic numbers. Claude runs it as a `PostToolUse` hook, Pi as a loaded package; Codex has no per-edit hook mechanism and is not wired in. The rules resolve `eslint` and `typescript-eslint` from the mounted project and fail open with a labelled warning when they are absent, so a tooling problem never looks like a code violation.
-
-Thresholds live in `agent-eslint-rules/eslint.config.agent.mjs`. See [`compose/README.md`](compose/README.md#per-edit-lint-rules) for details and [`agent-eslint-rules/README.md`](agent-eslint-rules/README.md) for what each rule does.
+It isn't in [`config/claude/mcp.json`](config/claude/mcp.json) because that file feeds the containers, which have neither `cmd.exe` nor a browser.
 
 ## Azure DevOps skills
 
-The `*-azure-devops-*` skills in [`skills/`](skills/) read and write Azure DevOps work items and pull requests — tickets, PR diffs, review comments, PR descriptions, opening a PR, and a risk review that chains them. They need a Personal Access Token and no pip packages.
+The `*-azure-devops-*` skills read and write Azure DevOps tickets and pull requests. They need:
 
-Set `AZURE_DEVOPS_EXT_PAT` in `.env` before your first run. `./compose/run` creates `.env` from `env.example` when it is missing and warns on startup when no PAT is available, so the problem surfaces before Docker starts rather than later inside a skill. `ADO_ORG` and `ADO_PROJECT` already default to the organisation the skills were written against.
+- `python3` and `git`.
+- A Personal Access Token in `AZURE_DEVOPS_EXT_PAT` or `~/.config/azure-devops/pat`.
+- The [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) with the `azure-devops` extension (`az extension add --name azure-devops`). Only `read-azure-devops-ticket` needs it. The rest call the REST API directly.
 
-All but one of these skills use the REST API through the Python standard library. `read-azure-devops-ticket` shells out to `az boards work-item`, so it alone needs the `az` CLI built into the image:
+Install the whole group, because the review skill calls its siblings' scripts. [`skills/README.md`](skills/README.md#azure-devops-skills) covers PAT scopes, organisation settings, and how the skills chain together.
+
+## Running agents in Docker (optional)
+
+Both variants run Claude Code, Codex, and Pi without installing any of them on the host.
+
+| | Docker Sandboxes (`sbx/`) | Docker Compose (`compose/`) |
+|---|---|---|
+| Host requirement | `sbx`, Docker login, hardware virtualisation | Docker Engine/Desktop with Compose |
+| Isolation | Separate microVM and kernel | Ordinary container isolation |
+| Skills/config updates | Snapshot when a sandbox is created | Live read-only bind mounts |
+| Subscription login | Best integration, especially Codex | Works, but browser callbacks can be less convenient |
+| Resource use | Higher | Lower |
 
 ```sh
-INSTALL_AZURE_CLI=true ./compose/run --build claude ~/repos/my-ado-project
+./sbx/run claude ../my-project       # or codex, pi
+./compose/run claude ../my-project
 ```
 
-It adds roughly 900MB to the image, which is why it is off by default. `./compose/run` records the setting on the image and rebuilds by itself when you change it. See [`skills/README.md`](skills/README.md#azure-devops-skills) for PAT scopes and the draft → open → review chain.
+Both runners read `.env`, which `./compose/run` creates from [`env.example`](env.example) on first run:
 
-## Authentication
+| Variable | Effect |
+|---|---|
+| `WORKSPACE` | Project mounted at `/workspace` when no workspace argument is given |
+| `AGENT_ESLINT_RULES` | Location of the lint rules clone, relative to `compose/` |
+| `AZURE_DEVOPS_EXT_PAT` | PAT for the Azure DevOps skills |
+| `ADO_ORG`, `ADO_PROJECT` | Organisation and default project those skills target |
+| `INSTALL_AZURE_CLI` | Build the `az` CLI into the Compose image (about 900MB, off by default) |
 
-Authentication is user-specific runtime state and is never included in this repository or its images.
+A workspace given on the command line wins over `WORKSPACE`. `AGENT_ENV_FILE` points the runners at a different file. [`compose/README.md`](compose/README.md) and [`sbx/README.md`](sbx/README.md) cover authentication, the per-edit lint hook, MCP servers, and isolation.
 
-- Claude and Pi support Anthropic subscription login through `/login`.
-- Codex supports ChatGPT subscription login.
-- Pi also supports OpenAI subscription login through `/login`.
-- API keys can be supplied through SBX secrets or host environment variables, depending on the variant.
-
-A developer needs the chosen container runtime but does not need any agent harness installed locally.
-
-## Customize the setup
-
-Edit the canonical files directly:
-
-```text
-skills/                  Agent Skills packages
-config/shared/AGENTS.md  Instructions shared across harnesses
-config/nimbus/           Project instructions for the Nimbus workspace
-config/claude/           Claude Code settings
-config/claude/mcp.json   Optional MCP servers, passed as --mcp-config when present
-config/codex/            Codex settings
-config/pi/               Pi settings, extensions, prompts, and themes
-agent-eslint-rules/      Per-edit lint rules and their thresholds
-.env                     Workspace and path defaults (git-ignored)
-```
-
-Keep credentials, OAuth tokens, sessions, machine-specific paths, and private keys out of `config/`.
-
-Compose sees skill and configuration changes on the next container start. An existing SBX sandbox keeps its creation-time snapshot; reset it explicitly when you want to apply repository changes.
-
-## Use the skills without isolation
-
-Copy or link individual directories from [`skills/`](skills/) into a harness-supported skills directory. Pi can also install this repository as a local or Git package because it contains a conventional `skills/` directory.
+Keep credentials, tokens, sessions, and machine-specific paths out of `config/`.

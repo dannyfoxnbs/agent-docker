@@ -5,9 +5,11 @@ the `thenbs` org, `Nimbus` project. Built to grow toward PRs and code reviews.
 
 ## Setup (one-time, per person)
 
-1. Create a Personal Access Token with **Work Items (Read)** scope at
+1. Install the `az` CLI and the `azure-devops` extension
+   (`az extension add --name azure-devops`).
+2. Create a Personal Access Token with **Work Items (Read)** scope at
    https://thenbs.visualstudio.com/_usersSettings/tokens
-2. Store it (never commit it):
+3. Store it (never commit it):
 
    ```bash
    mkdir -p ~/.config/azure-devops
@@ -36,5 +38,5 @@ Override the target with the `ADO_ORG` / `ADO_PROJECT` env vars.
 
 - **Auth error / PAT rejected** — the token is expired or missing the Work Items
   (Read) scope. Regenerate it at the link above.
-- **`az` not found** — not used; this skill talks to the REST API with the Python
-  standard library only.
+- **`az` not found** — install the Azure CLI, then
+  `az extension add --name azure-devops`.

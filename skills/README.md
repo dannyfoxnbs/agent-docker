@@ -51,7 +51,7 @@ review-azure-devops-pr                    ->  inline findings + summary posted
 
 ### Requirements
 
-`python3` and `git`. The scripts use the Azure DevOps REST API through the Python standard library — no pip packages, and **the `az` CLI is not needed**.
+`python3` and `git`. Most scripts use the Azure DevOps REST API through the Python standard library, with no pip packages. `read-azure-devops-ticket` is the exception: it shells out to `az boards work-item show`, so it needs the [`az` CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) and its extension (`az extension add --name azure-devops`).
 
 ### Authentication
 
@@ -101,7 +101,7 @@ The PR skills that shell out to `git` need the PR's clone to be the mounted work
 ./compose/run claude ~/repos/my-ado-project
 ```
 
-The `az` CLI is not installed by default. Build it in when you want it for ad-hoc shell work:
+The `az` CLI is not installed by default. Build it in for `read-azure-devops-ticket` or ad-hoc shell work:
 
 ```sh
 INSTALL_AZURE_CLI=true ./compose/run --build claude ~/repos/my-ado-project
