@@ -2,6 +2,8 @@
 
 The agent skills, configuration, and hooks I use day to day, shared so you can take the pieces you want.
 
+A lot of my skills come from / inspired by Matt Pocock : https://github.com/mattpocock/skills
+
 ## What's here
 
 - [`skills/`](skills/): Agent Skills such as TDD, Angular coding and testing, grilling, SonarCloud coverage, and a group of Azure DevOps skills for tickets and PRs. See [`skills/README.md`](skills/README.md).
@@ -27,14 +29,14 @@ ln -s ~/repos/agent-docker/skills/tdd <project>/.claude/skills/tdd       # one p
 
 What I run day to day, for context. None of it is required.
 
-| Tool | Used for |
-|---|---|
-| [WezTerm](https://wezterm.org) | Terminal |
-| Herdr | Terminal multiplexer for running several agent sessions side by side |
-| [Neovim](https://neovim.io) | Editor |
-| [lazygit](https://github.com/jesseduffield/lazygit) | Git TUI for reviewing and staging what agents change |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Main coding agent |
-| Pi | Second coding agent, for local models and GitHub Copilot models |
+| Tool                                                          | Used for                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [WezTerm](https://wezterm.org)                                | Terminal                                                             |
+| Herdr                                                         | Terminal multiplexer for running several agent sessions side by side |
+| [Neovim](https://neovim.io)                                   | Editor                                                               |
+| [lazygit](https://github.com/jesseduffield/lazygit)           | Git TUI for reviewing and staging what agents change                 |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Main coding agent                                                    |
+| Pi                                                            | Second coding agent, for local models and GitHub Copilot models      |
 
 All of this runs on Windows under WSL2.
 
@@ -67,13 +69,13 @@ Install the whole group, because the review skill calls its siblings' scripts. [
 
 Both variants run Claude Code, Codex, and Pi without installing any of them on the host.
 
-| | Docker Sandboxes (`sbx/`) | Docker Compose (`compose/`) |
-|---|---|---|
-| Host requirement | `sbx`, Docker login, hardware virtualisation | Docker Engine/Desktop with Compose |
-| Isolation | Separate microVM and kernel | Ordinary container isolation |
-| Skills/config updates | Snapshot when a sandbox is created | Live read-only bind mounts |
-| Subscription login | Best integration, especially Codex | Works, but browser callbacks can be less convenient |
-| Resource use | Higher | Lower |
+|                       | Docker Sandboxes (`sbx/`)                    | Docker Compose (`compose/`)                         |
+| --------------------- | -------------------------------------------- | --------------------------------------------------- |
+| Host requirement      | `sbx`, Docker login, hardware virtualisation | Docker Engine/Desktop with Compose                  |
+| Isolation             | Separate microVM and kernel                  | Ordinary container isolation                        |
+| Skills/config updates | Snapshot when a sandbox is created           | Live read-only bind mounts                          |
+| Subscription login    | Best integration, especially Codex           | Works, but browser callbacks can be less convenient |
+| Resource use          | Higher                                       | Lower                                               |
 
 ```sh
 ./sbx/run claude ../my-project       # or codex, pi
@@ -82,13 +84,13 @@ Both variants run Claude Code, Codex, and Pi without installing any of them on t
 
 Both runners read `.env`, which `./compose/run` creates from [`env.example`](env.example) on first run:
 
-| Variable | Effect |
-|---|---|
-| `WORKSPACE` | Project mounted at `/workspace` when no workspace argument is given |
-| `AGENT_ESLINT_RULES` | Location of the lint rules clone, relative to `compose/` |
-| `AZURE_DEVOPS_EXT_PAT` | PAT for the Azure DevOps skills |
-| `ADO_ORG`, `ADO_PROJECT` | Organisation and default project those skills target |
-| `INSTALL_AZURE_CLI` | Build the `az` CLI into the Compose image (about 900MB, off by default) |
+| Variable                 | Effect                                                                  |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `WORKSPACE`              | Project mounted at `/workspace` when no workspace argument is given     |
+| `AGENT_ESLINT_RULES`     | Location of the lint rules clone, relative to `compose/`                |
+| `AZURE_DEVOPS_EXT_PAT`   | PAT for the Azure DevOps skills                                         |
+| `ADO_ORG`, `ADO_PROJECT` | Organisation and default project those skills target                    |
+| `INSTALL_AZURE_CLI`      | Build the `az` CLI into the Compose image (about 900MB, off by default) |
 
 A workspace given on the command line wins over `WORKSPACE`. `AGENT_ENV_FILE` points the runners at a different file. [`compose/README.md`](compose/README.md) and [`sbx/README.md`](sbx/README.md) cover authentication, the per-edit lint hook, MCP servers, and isolation.
 
