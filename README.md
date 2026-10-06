@@ -11,7 +11,7 @@ A lot of my skills come from / inspired by Matt Pocock : https://github.com/matt
 - [`mcp/`](mcp/): the MCP servers I use (Chrome DevTools) and the `claude mcp add` command for each.
 - [`config/claude/hooks/`](config/claude/hooks/): Claude Code hooks. They lint each edit, review diffs, notify you when you are away, and update the status line.
 - [`agent-eslint-rules/`](agent-eslint-rules/): stricter lint rules that check only the lines an agent just wrote (no comments, short functions, few parameters, no magic numbers).
-- [`compose/`](compose/) and [`sbx/`](sbx/): optional ways to run Claude Code, Codex, and Pi in Docker so they don't touch your host.
+- [`compose/`](compose/) and [`sbx/`](sbx/): optional ways to run Claude Code, Codex, and Pi (plus omp under Compose) in Docker so they don't touch your host.
 
 ## Quick start: let Claude pick for you
 
@@ -82,6 +82,7 @@ Both variants run Claude Code, Codex, and Pi without installing any of them on t
 ```sh
 ./sbx/run claude ../my-project       # or codex, pi
 ./compose/run claude ../my-project
+./compose/run omp ../my-project     # Compose only; picks up local llama-server models
 ```
 
 Both runners read `.env`, which `./compose/run` creates from [`env.example`](env.example) on first run:
@@ -93,6 +94,7 @@ Both runners read `.env`, which `./compose/run` creates from [`env.example`](env
 | `AZURE_DEVOPS_EXT_PAT`   | PAT for the Azure DevOps skills                                         |
 | `ADO_ORG`, `ADO_PROJECT` | Organisation and default project those skills target                    |
 | `INSTALL_AZURE_CLI`      | Build the `az` CLI into the Compose image (about 900MB, off by default) |
+| `LLAMA_CPP_BASE_URL`     | llama-server omp discovers models from (default: the host's port 8080)  |
 
 A workspace given on the command line wins over `WORKSPACE`. `AGENT_ENV_FILE` points the runners at a different file. [`compose/README.md`](compose/README.md) and [`sbx/README.md`](sbx/README.md) cover authentication, the per-edit lint hook, MCP servers, and isolation.
 

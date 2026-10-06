@@ -3,7 +3,7 @@ set -eu
 
 agent=${1:-}
 if [ -z "$agent" ]; then
-  printf '%s\n' 'Expected one of: claude, codex, pi' >&2
+  printf '%s\n' 'Expected one of: claude, codex, pi, omp' >&2
   exit 2
 fi
 shift
@@ -49,13 +49,14 @@ export_eslint_runner() {
   fi
 }
 
-mkdir -p "$HOME/.agents" "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent"
+mkdir -p "$HOME/.agents" "$HOME/.claude" "$HOME/.codex" "$HOME/.pi/agent" "$HOME/.omp/agent"
 replace_link "$skills" "$HOME/.agents/skills"
 
 if [ -s "$config/shared/AGENTS.md" ]; then
   replace_link "$config/shared/AGENTS.md" "$HOME/.claude/CLAUDE.md"
   replace_link "$config/shared/AGENTS.md" "$HOME/.codex/AGENTS.md"
   replace_link "$config/shared/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
+  replace_link "$config/shared/AGENTS.md" "$HOME/.omp/agent/AGENTS.md"
 fi
 
 case "$agent" in
@@ -93,6 +94,9 @@ case "$agent" in
       replace_link "$config/pi/$resource" "$HOME/.pi/agent/$resource"
     done
     exec pi "$@"
+    ;;
+  omp)
+    exec omp "$@"
     ;;
   *)
     printf 'Unknown agent: %s\n' "$agent" >&2

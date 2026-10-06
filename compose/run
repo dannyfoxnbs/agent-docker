@@ -3,11 +3,12 @@ set -eu
 
 usage() {
   cat <<'EOF'
-Usage: ./compose/run [--build] <claude|codex|pi> [workspace]
+Usage: ./compose/run [--build] <claude|codex|pi|omp> [workspace]
 
 Examples:
   ./compose/run claude ../my-project
   ./compose/run pi ../my-project
+  ./compose/run omp ../my-project
   ./compose/run --build codex ../my-project
 EOF
 }
@@ -20,7 +21,7 @@ fi
 
 agent=${1:-}
 case "$agent" in
-  claude|codex|pi) ;;
+  claude|codex|pi|omp) ;;
   *) usage >&2; exit 2 ;;
 esac
 shift

@@ -1,6 +1,6 @@
 # Docker Compose variant
 
-This variant builds one image containing Claude Code, Codex, and Pi. Skills are bind-mounted read-only. Portable configuration is bind-mounted read-write so changes made through a harness settings UI can be reviewed and kept in the repository. Repository changes are visible without rebuilding the image.
+This variant builds one image containing Claude Code, Codex, Pi, and [omp](https://github.com/can1357/oh-my-pi). Skills are bind-mounted read-only. Portable configuration is bind-mounted read-write so changes made through a harness settings UI can be reviewed and kept in the repository. Repository changes are visible without rebuilding the image.
 
 ## Run
 
@@ -10,6 +10,7 @@ From the repository root:
 ./compose/run claude ../my-project
 ./compose/run codex ../my-project
 ./compose/run pi ../my-project
+./compose/run omp ../my-project
 ```
 
 The workspace defaults to this repository when omitted. Agent packages use their latest releases at image-build time. Refresh them explicitly with a clean, pull-through rebuild:
@@ -35,8 +36,26 @@ Each harness has a named state volume, so an interactive login survives replacem
 - Claude: use `/login`. In a container, copy the displayed URL into the host browser and paste the returned code when prompted. `ANTHROPIC_API_KEY` and `CLAUDE_CODE_OAUTH_TOKEN` are passed through when set on the host.
 - Codex: follow its ChatGPT/API-key login prompt. Browser callback flows can be less convenient in plain Compose than in SBX. Credentials use file storage under the persistent Codex volume.
 - Pi: use `/login`. `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` are passed through when set on the host.
+- omp: use `/login`, or run local models (below). Its state lives in the `omp-state` volume.
 
 Never add credentials to `compose.yaml`, the image, or `config/`. Harness settings can write through to `config/`, so review those changes before committing them.
+
+## Local models (omp)
+
+omp needs no models file for local inference. At startup it asks llama-server for its loaded models and reads the context size from the server's `-c` flag. The container points it at `http://host.docker.internal:8080`, which is the Windows host under Docker Desktop.
+
+Start llama-server on the host so it listens beyond loopback, for example:
+
+```powershell
+llama-server -hf unsloth/Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL -ngl 99 -c 131072 -fa on -np 1 `
+  --spec-type draft-mtp --spec-draft-n-max 6 --host 0.0.0.0 --port 8080
+```
+
+Then `./compose/run omp ../my-project` and choose the model with `/model`. If the server is not running, omp warns that discovery failed and carries on with its other providers.
+
+Set `LLAMA_CPP_BASE_URL` in `.env` for a different host or port. `LM_STUDIO_BASE_URL` and `OLLAMA_HOST` are passed through as well, and omp discovers those servers the same way.
+
+omp reads the shared `AGENTS.md` and the skills through `~/.agents/skills`. The Pi extensions and the per-edit lint package are not wired in, because they target Pi's extension API.
 
 ## Azure DevOps skills
 

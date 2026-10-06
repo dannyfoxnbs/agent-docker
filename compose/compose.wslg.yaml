@@ -23,3 +23,7 @@ services:
     environment: *wslg-environment
     shm_size: 1gb
     volumes: *wslg-volumes
+  omp:
+    environment: *wslg-environment
+    shm_size: 1gb
+    volumes: *wslg-volumes

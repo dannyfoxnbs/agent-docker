@@ -3,6 +3,7 @@ FROM node:24-bookworm-slim
 ARG CLAUDE_CODE_VERSION=latest
 ARG CODEX_VERSION=latest
 ARG PI_VERSION=latest
+ARG OMP_VERSION=latest
 ARG DIFF_REVIEW_REF=main
 ARG INSTALL_AZURE_CLI=false
 
@@ -27,6 +28,7 @@ RUN npm install -g \
       "@openai/codex@${CODEX_VERSION}" \
     && npm install -g --ignore-scripts \
       "@earendil-works/pi-coding-agent@${PI_VERSION}" \
+    && npm install -g bun "@oh-my-pi/pi-coding-agent@${OMP_VERSION}" \
     && npm cache clean --force
 
 RUN git clone --depth 1 --branch "${DIFF_REVIEW_REF}" \
@@ -64,7 +66,7 @@ LABEL com.portable-agents.inputs="${BUILD_INPUTS_SHA}"
 
 COPY entrypoint.sh /usr/local/bin/portable-agent
 RUN chmod 0755 /usr/local/bin/portable-agent \
-    && mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.pi/agent /home/node/.agents \
+    && mkdir -p /workspace /home/node/.claude /home/node/.codex /home/node/.pi/agent /home/node/.omp/agent /home/node/.agents \
     && chown -R node:node /workspace /home/node
 
 USER node

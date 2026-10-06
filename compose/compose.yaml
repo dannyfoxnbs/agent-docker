@@ -79,7 +79,40 @@ services:
       - *eslint-rules
       - pi-state:/home/node/.pi
 
+  omp:
+    <<: *agent
+    command: ["omp"]
+    # omp discovers models from a running llama-server or LM Studio by itself.
+    # host.docker.internal is the machine running Docker: the Windows host under
+    # Docker Desktop, mapped explicitly so plain Docker Engine resolves it too.
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - ANTHROPIC_API_KEY
+      - ANTHROPIC_AUTH_TOKEN
+      - OPENAI_API_KEY
+      - TERM
+      - AZURE_DEVOPS_EXT_PAT
+      - ADO_ORG
+      - ADO_PROJECT
+      - LLAMA_CPP_BASE_URL=${LLAMA_CPP_BASE_URL:-http://host.docker.internal:8080}
+      - LM_STUDIO_BASE_URL
+      - OLLAMA_HOST
+    volumes:
+      - type: bind
+        source: ${WORKSPACE:-..}
+        target: /workspace
+      - type: bind
+        source: ../skills
+        target: /opt/agent-skills
+        read_only: true
+      - type: bind
+        source: ../config
+        target: /opt/agent-config
+      - omp-state:/home/node/.omp
+
 volumes:
   claude-state:
   codex-state:
   pi-state:
+  omp-state:
