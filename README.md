@@ -8,9 +8,26 @@ A lot of my skills come from / inspired by Matt Pocock : https://github.com/matt
 
 - [`skills/`](skills/): Agent Skills such as TDD, Angular coding and testing, grilling, SonarCloud coverage, and a group of Azure DevOps skills for tickets and PRs. See [`skills/README.md`](skills/README.md).
 - [`config/`](config/): harness configuration you can share safely. That covers instructions shared across harnesses, Claude Code settings, slash commands, the status line, and MCP servers, plus Pi extensions and Codex defaults. See [`config/README.md`](config/README.md).
+- [`mcp/`](mcp/): the MCP servers I use (Breeze, Chrome DevTools) and the `claude mcp add` command for each.
 - [`config/claude/hooks/`](config/claude/hooks/): Claude Code hooks. They lint each edit, review diffs, notify you when you are away, and update the status line.
 - [`agent-eslint-rules/`](agent-eslint-rules/): stricter lint rules that check only the lines an agent just wrote (no comments, short functions, few parameters, no magic numbers).
 - [`compose/`](compose/) and [`sbx/`](sbx/): optional ways to run Claude Code, Codex, and Pi in Docker so they don't touch your host.
+
+## Quick start: let Claude pick for you
+
+Paste this into Claude Code (or any agent) in the project you want the skills in:
+
+```text
+Fetch the skills from https://github.com/dannyfoxnbs/agent-docker (clone it to
+~/repos/agent-docker if it isn't there, otherwise git pull). Read skills/README.md
+and each skills/*/SKILL.md description, then show me the list and ask which ones I
+want. Also ask whether they should go in this project (.claude/skills) or
+everywhere (~/.claude/skills). Symlink the ones I pick so they update with git
+pull. Install the Azure DevOps skills as a whole group, never singly. Don't touch
+my settings or anything outside the skills directory.
+```
+
+For the full setup (Docker, config, lint rules), paste [`PROMPT.md`](PROMPT.md) instead.
 
 ## Pick what you want
 
@@ -32,28 +49,13 @@ What I run day to day, for context. None of it is required.
 | Tool                                                          | Used for                                                             |
 | ------------------------------------------------------------- | -------------------------------------------------------------------- |
 | [WezTerm](https://wezterm.org)                                | Terminal                                                             |
-| Herdr                                                         | Terminal multiplexer for running several agent sessions side by side |
+| [Herdr](https://herdr.dev/)                                   | Terminal multiplexer for running several agent sessions side by side |
 | [Neovim](https://neovim.io)                                   | Editor                                                               |
 | [lazygit](https://github.com/jesseduffield/lazygit)           | Git TUI for reviewing and staging what agents change                 |
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Main coding agent                                                    |
-| Pi                                                            | Second coding agent, for local models and GitHub Copilot models      |
+| [Pi](https://pi.dev/)                                         | Second coding agent, for local models and GitHub Copilot models      |
 
 All of this runs on Windows under WSL2.
-
-## Chrome DevTools MCP
-
-The [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) lets an agent drive a real browser. It can click through the app, read the console and network requests, and take screenshots. I use it all the time to check frontend changes. You log in yourself, and the agent takes over from there.
-
-On WSL it has to run on the Windows side. WSL can't reach a Windows Chrome debug port, and a headed Chromium inside WSL is unreliable. Run this from the project you want it in:
-
-```sh
-claude mcp add chrome-devtools -- cmd.exe /c npx -y -p node@22 -p chrome-devtools-mcp@latest \
-  chrome-devtools-mcp --no-performance-crux --no-usage-statistics
-```
-
-`-p node@22` covers an older Windows Node, since the MCP needs Node 22. The two `--no-*` flags stop internal URLs from being sent to Google. On macOS or native Linux, drop the `cmd.exe /c` and the `node@22` package.
-
-It isn't in [`config/claude/mcp.json`](config/claude/mcp.json) because that file feeds the containers, which have neither `cmd.exe` nor a browser.
 
 ## Azure DevOps skills
 
