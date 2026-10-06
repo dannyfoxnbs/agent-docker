@@ -4,7 +4,6 @@ This directory contains configuration that is safe to share. Runtime state such 
 
 - `shared/AGENTS.md` — instructions shared by all harnesses.
 - `claude/settings.json` — additional Claude Code settings.
-- `claude/mcp.json` — MCP servers passed to Claude as `--mcp-config` (currently the Breeze remote endpoint). See [`../mcp/`](../mcp/) for every MCP server I use and how to add each one on the host.
 - `codex/config.toml` — Codex defaults.
 - `pi/settings.json` — Pi defaults and reproducible package sources.
 - `pi/models.json` — portable custom models that resolve credentials from environment variables.

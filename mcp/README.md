@@ -2,20 +2,7 @@
 
 The MCP servers I use, and how to add each one to Claude Code on your host.
 
-The containers don't read this folder. They load [`config/claude/mcp.json`](../config/claude/mcp.json), which `compose/entrypoint.sh` passes to Claude as `--mcp-config`. Only servers that work inside a container go in that file.
-
-| Server          | In `mcp.json` | Used for                                            |
-| --------------- | ------------- | --------------------------------------------------- |
-| Breeze          | Yes           | Hubexo's Breeze AI endpoint                         |
-| Chrome DevTools | No            | Letting an agent drive a real browser on your host |
-
-## Breeze
-
-A remote HTTP server, so it works the same on the host and in a container:
-
-```sh
-claude mcp add --transport http breeze-mcp https://breezeai-mcp.hubexo-ai-global-breeze.com/mcp
-```
+The containers don't read this folder. They load `config/claude/mcp.json` if it exists, which `compose/entrypoint.sh` passes to Claude as `--mcp-config`. None is committed right now; [`compose/README.md`](../compose/README.md#mcp-servers) covers adding one.
 
 ## Chrome DevTools
 
@@ -30,4 +17,4 @@ claude mcp add chrome-devtools -- cmd.exe /c npx -y -p node@22 -p chrome-devtool
 
 `-p node@22` covers an older Windows Node, since the MCP needs Node 22. The two `--no-*` flags stop internal URLs from being sent to Google. On macOS or native Linux, drop the `cmd.exe /c` and the `node@22` package.
 
-It isn't in `mcp.json` because the containers have neither `cmd.exe` nor a browser.
+It can't run in the containers because they have neither `cmd.exe` nor a browser.

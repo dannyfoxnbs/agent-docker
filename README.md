@@ -8,7 +8,7 @@ A lot of my skills come from / inspired by Matt Pocock : https://github.com/matt
 
 - [`skills/`](skills/): Agent Skills such as TDD, Angular coding and testing, grilling, SonarCloud coverage, and a group of Azure DevOps skills for tickets and PRs. See [`skills/README.md`](skills/README.md).
 - [`config/`](config/): harness configuration you can share safely. That covers instructions shared across harnesses, Claude Code settings, slash commands, the status line, and MCP servers, plus Pi extensions and Codex defaults. See [`config/README.md`](config/README.md).
-- [`mcp/`](mcp/): the MCP servers I use (Breeze, Chrome DevTools) and the `claude mcp add` command for each.
+- [`mcp/`](mcp/): the MCP servers I use (Chrome DevTools) and the `claude mcp add` command for each.
 - [`config/claude/hooks/`](config/claude/hooks/): Claude Code hooks. They lint each edit, review diffs, notify you when you are away, and update the status line.
 - [`agent-eslint-rules/`](agent-eslint-rules/): stricter lint rules that check only the lines an agent just wrote (no comments, short functions, few parameters, no magic numbers).
 - [`compose/`](compose/) and [`sbx/`](sbx/): optional ways to run Claude Code, Codex, and Pi in Docker so they don't touch your host.

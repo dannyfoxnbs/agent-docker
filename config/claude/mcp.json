@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "breeze-mcp": {
-      "type": "http",
-      "url": "https://breezeai-mcp.hubexo-ai-global-breeze.com/mcp"
-    }
-  }
-}
