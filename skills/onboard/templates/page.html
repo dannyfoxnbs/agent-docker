@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAGE TITLE — REPO</title>
+<meta name="description" content="ONE SENTENCE: what the reader can do or understand after this page. The hub shows it on the card.">
+<meta name="onboarding:commit" content="FULL COMMIT SHA PRINTED BY init">
+<link rel="stylesheet" href="ROOT/assets/onboarding.css">
+<script src="ROOT/assets/site.js"></script>
+<script defer src="ROOT/assets/onboarding.js"></script>
+</head>
+<body>
+<main class="page">
+<header class="page-head">
+  <p class="eyebrow">KIND · TOPIC</p>
+  <h1>PAGE TITLE</h1>
+  <p class="lede">THE ANSWER IN TWO SENTENCES — the reader should get the point before scrolling.</p>
+</header>
+
+<section id="first-section">
+  <h2>Section heading that states a claim</h2>
+  <p>Prose with an inline reference: <a class="src" data-src="path/from/git/root.ts:42">SymbolOnThatLine</a>.</p>
+  <figure class="code" data-src="path/from/git/root.ts:40-48">
+    <pre><code>verbatim lines 40–48, with &lt; &gt; &amp; escaped</code></pre>
+    <figcaption>What to notice in this excerpt.</figcaption>
+  </figure>
+  <figure class="diagram">
+    <pre class="mermaid">
+flowchart LR
+  ui["Web app"] -->|"POST /graphql"| api["API"]
+    </pre>
+    <figcaption>The one claim this diagram makes.</figcaption>
+  </figure>
+</section>
+
+<section id="confidence">
+  <h2>Confidence and gaps</h2>
+  <p>What was traced end to end, what was inferred, what was surveyed but not opened, and who to ask.</p>
+</section>
+</main>
+</body>
+</html>
